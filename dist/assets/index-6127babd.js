@@ -1,0 +1,1 @@
+import{b as a}from"./base-23d00206.js";import{p as i}from"./lodash-es-cc4652a2.js";const o=a({ariaLabel:String,ariaOrientation:{type:String,values:["horizontal","vertical","undefined"]},ariaControls:String}),s=r=>i(o,r);export{s as u};

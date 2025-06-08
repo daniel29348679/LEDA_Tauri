@@ -1,0 +1,58 @@
+編譯舊python leda app
+
+1.把files中的檔案都丟進earth-api中(跟app.py同一個地方)
+2.使用conda env create -f environment.yml來建立環境
+3.修改檔案中的特定語法，以符合python不同套件版本的需求
+ 
+exit(0) -> 
+import sys
+sys.exit(0)
+exit(1)也要
+
+NoneStr -> Optional[str]
+
+pip uninstall dataclasses
+pip install "pyinstaller<6"
+
+在C:\Users\Daniel\.conda\envs\leda\lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-transformers.py
+(Daniel是我的用戶名，要改成你的)
+修改這段（第 29 行）：
+if not is_module_satisfies(dependency_req):
+
+for dependency_name, dependency_req in dependencies.items():
+    try:
+        if not is_module_satisfies(dependency_req):
+            continue
+        datas += copy_metadata(dependency_name)
+    except Exception:
+        # 可以根據需要印出錯誤訊息
+        # print(f"Skipped {dependency_name} due to error: {e}")
+        pass
+
+
+
+
+4.pyinstaller app.spec
+
+如果你要重新匯出conda環境()
+
+Rust Tauri打包
+1.
+參考https://tauri.app/start/prerequisites/
+使用cargo install tauri-cli --version "^2.0.0" --locked
+
+2.把前面編譯完的leda_app複製到leda_tauri中
+leda_app會在earth-api/dist中
+
+
+3.開發跟編譯的部分
+dev:
+cargo tauri dev
+
+build:
+cargo tauri build
+
+開發新TAURI api的建議:
+原有的leda app會監聽port 8000
+新的TAURI api可以監聽8001
+並且前端要改成明顯指定新舊port

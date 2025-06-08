@@ -1,0 +1,10 @@
+{
+    "port": 8000,
+    "open_browser": false,
+    "full_screen": false,
+    "maximized": false,
+    "browser_width": 0,
+    "browser_height": 0,
+    "auth": false,
+    "seadeep_url": "https://www.seadeep.ai/"
+}
