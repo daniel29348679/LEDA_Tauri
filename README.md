@@ -1,97 +1,106 @@
-# LEDA 應用程式編譯與 Tauri 打包指南
+# LEDA App Compilation Guide
 
-本指南介紹如何編譯舊版 Python LEDA 應用程式並使用 Rust Tauri 進行打包。
+This guide provides step-by-step instructions to compile the LEDA app for Python and package it using PyInstaller, followed by integrating it with Rust Tauri for a desktop application.
 
-## 編譯 Python LEDA 應用程式
+## Python Compilation
 
-1. **複製檔案**
-   - 將 `files` 目錄中的所有檔案複製到 `earth-api` 目錄（與 `app.py` 位於同一目錄）。
+### Step 1: Setup Files
+- Copy all files from the `files` directory into the `earth-api` directory (same location as `app.py`).
+- `clean.ps1` need to be applied after pyinstaller compile failed.You must run it in the `earth-api` dir.
 
-2. **設置 Conda 環境**
-   - 執行以下命令以建立環境：
-     ```bash
-     conda env create -f environment.yml
-     ```
+### Step 2: Update Syntax
+Ensure the following syntax updates are applied to the codebase to match package version requirements:
+- Replace `exit(0)` with:
+  ```python
+  import sys
+  sys.exit(0)
+  ```
+- Replace `exit(1)` with:
+  ```python
+  import sys
+  sys.exit(1)
+  ```
+- Replace `NoneStr` with `Optional[str]`.
 
-3. **修改程式碼以適配相容性**
-   - 更新以下語法以符合 Python 套件版本要求：
-     - 將 `exit(0)` 替換為：
-       ```python
-       import sys
-       sys.exit(0)
-       ```
-     - 將 `exit(1)` 替換為：
-       ```python
-       import sys
-       sys.exit(1)
-       ```
-     - 將 `NoneStr` 替換為 `Optional[str]`。
-   - 移除 `dataclasses` 套件並安裝相容的 `pyinstaller` 版本：
-     ```bash
-     pip uninstall dataclasses
-     pip install "pyinstaller<6"
-     ```
-   - 修改 PyInstaller 的 hook 檔案，位於：
-     ```
-     C:\Users\<你的用戶名>\.conda\envs\leda\lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-transformers.py
-     ```
-     將第 29 行的程式碼：
-     ```python
-     if not is_module_satisfies(dependency_req):
-     ```
-     替換為：
-     ```python
-     for dependency_name, dependency_req in dependencies.items():
-         try:
-             if not is_module_satisfies(dependency_req):
-                 continue
-             datas += copy_metadata(dependency_name)
-         except Exception:
-             # 可選擇印出錯誤訊息
-             # print(f"Skipped {dependency_name} due to error: {e}")
-             pass
-     ```
+*Note*: The provided files are assumed to have these changes already applied.
 
-4. **建構應用程式**
-   - 使用以下命令透過 PyInstaller 建構應用程式：
-     ```bash
-     pyinstaller app.spec
-     ```
+### Step 3: Create and Activate Conda Environment
+Run the following commands to set up the environment:
+```bash
+conda create --name=leda python=3.8
+conda activate leda
+conda install pytorch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 cpuonly -c pytorch
+pip install -r requirements.txt
+```
 
-5. **重新匯出 Conda 環境（可選）**
-   - 若需重新匯出 Conda 環境，請使用：
-     ```bash
-     conda env export > environment.yml
-     ```
+### Step 4: Install PyInstaller and Dependencies
+Install the required PyInstaller packages:
+```bash
+pip uninstall dataclasses
+pip install "pyinstaller<6"
+pip install "pyinstaller-hooks-contrib==2025.4"
+```
 
-## Rust Tauri 打包
+### Step 5: Modify PyInstaller Hook
+Locate the file `hook-transformers.py` in one of the following paths (replace `Daniel` with your username):
+- Local installation: `C:\Users\<YourUsername>\.conda\envs\leda\lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-transformers.py`
+- Global installation: `C:\ProgramData\anaconda3\envs\leda\lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-transformers.py`
 
-1. **安裝 Tauri CLI**
-   - 參考 [Tauri 前置條件](https://tauri.app/start/prerequisites/) 的要求。
-   - 安裝指定版本的 Tauri CLI：
-     ```bash
-     cargo install tauri-cli --version "^2.0.0" --locked
-     ```
+Replace the content starting from line 21 (starting with `except Exception:`) to the end with:
+```python
+except Exception:
+    logger.warning(
+        "hook-transformers: failed to query dependency table (transformers.dependency_versions_table.deps)!",
+        exc_info=True,
+    )
+    dependencies = {}
 
-2. **複製編譯完成的 LEDA 應用程式**
-   - 將 `earth-api/dist` 目錄中的 `leda_app` 複製到 `leda_tauri` 目錄。
+    for dependency_name, dependency_req in dependencies.items():
+        try:
+            if not is_module_satisfies(dependency_req):
+                continue
+            datas += copy_metadata(dependency_name)
+        except Exception:
+            # Can print error message if needed
+            # print(f"Skipped {dependency_name} due to error: {e}")
+            pass
+# Collect source .py files for JIT/torchscript. Requires PyInstaller >= 5.3, no-op in older versions.
+module_collection_mode = 'pyz+py'
+```
 
-3. **開發與建構命令**
-   - 開發模式：
-     ```bash
-     cargo tauri dev
-     ```
-   - 建構應用程式：
-     ```bash
-     cargo tauri build
-     ```
+### Step 6: Run PyInstaller
+Execute the following command to build the app:
+```bash
+pyinstaller app.spec
+```
 
-4. **開發新 Tauri API 的建議**
-   - 原有 LEDA 應用程式監聽埠 `8000`。
-   - 新 Tauri API 建議監聽埠 `8001`。
-   - 更新前端程式碼，明確指定舊埠（`8000`）和新埠（`8001`），以避免衝突。
+### Step 7: Verify the Build
+- The compiled app will be located in `dist/leda_app`.
+- Run `leda_app.exe` in the `leda_app` folder to test the build.
+- If an error occurs (e.g., missing `libzbar-64.dll`), ensure Visual C++ Redistributable(Visual Studio 2013 (VC++ 12.0)) is installed on your system. Most systems should already have this installed.
 
-## 注意事項
-- 將檔案路徑中的 `<你的用戶名>` 替換為你的實際用戶名。
-- 確保所有依賴套件與使用的 Python 和 Tauri 版本相容。
-- 修改完成後，徹底測試應用程式以確保功能正常。
+## Rust Tauri Packaging
+
+### Step 1: Install Tauri CLI
+Follow the prerequisites outlined at [Tauri Prerequisites](https://tauri.app/start/prerequisites/). Then, install the Tauri CLI:
+```bash
+cargo install tauri-cli --version "^2.0.0" --locked
+```
+
+### Step 2: Copy Compiled LEDA App
+- Copy the compiled `leda_app` folder from `earth-api/dist` to the `leda_tauri` directory.
+
+### Step 3: Develop and Build with Tauri
+- For development:
+  ```bash
+  cargo tauri dev
+  ```
+- For building the final app:
+  ```bash
+  cargo tauri build
+  ```
+
+### Recommendations for New Tauri API Development
+- The original LEDA app listens on port `8000`.
+- For a new Tauri API, use port `8001`.
+- Update the frontend to explicitly specify the old (`8000`) and new (`8001`) ports to avoid conflicts.

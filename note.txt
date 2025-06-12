@@ -34,7 +34,87 @@ for dependency_name, dependency_req in dependencies.items():
 
 4.pyinstaller app.spec
 
-如果你要重新匯出conda環境()
+Rust Tauri打包
+1.
+參考https://tauri.app/start/prerequisites/
+使用cargo install tauri-cli --version "^2.0.0" --locked
+
+2.把前面編譯完的leda_app複製到leda_tauri中
+leda_app會在earth-api/dist中
+
+
+3.開發跟編譯的部分
+dev:
+cargo tauri dev
+
+build:
+cargo tauri build
+
+開發新TAURI api的建議:
+原有的leda app會監聽port 8000
+新的TAURI api可以監聽8001
+並且前端要改成明顯指定新舊port
+
+新版!!
+新版!!
+-------------------------------------------------------------
+編譯舊python leda app
+
+1.把files中的檔案都丟進earth-api中(跟app.py同一個地方)
+2.修改檔案中的特定語法，以符合python不同套件版本的需求(我付上的已經改過)
+ 
+exit(0) -> 
+import sys
+sys.exit(0)
+exit(1)也要
+
+NoneStr -> Optional[str]
+
+
+執行以下命令以建立環境：
+conda create --name=leda python=3.8
+conda activate leda
+conda install pytorch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 cpuonly -c pytorch
+pip install -r requirements.txt
+
+pip uninstall dataclasses
+pip install "pyinstaller<6"
+pip install "pyinstaller-hooks-contrib==2025.4"
+
+在C:\Users\Daniel\.conda\envs\leda\lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-transformers.py
+(Daniel是我的用戶名，要改成你的)C:\ProgramData\anaconda3\envs\leda\lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-transformers.py
+如果你的anaconda是全域安裝，你的path是
+修改這段，直接取代到結尾（第 21 行）：
+
+
+except Exception:
+    logger.warning(
+        "hook-transformers: failed to query dependency table (transformers.dependency_versions_table.deps)!",
+        exc_info=True,
+    )
+    dependencies = {}
+
+    for dependency_name, dependency_req in dependencies.items():
+        try:
+            if not is_module_satisfies(dependency_req):
+                continue
+            datas += copy_metadata(dependency_name)
+        except Exception:
+            # 可以根據需要印出錯誤訊息
+            # print(f"Skipped {dependency_name} due to error: {e}")
+            pass
+# Collect source .py files for JIT/torchscript. Requires PyInstaller >= 5.3, no-op in older versions.
+module_collection_mode = 'pyz+py'
+
+
+
+app.spec 中conda path要設定，該檔案中有教學
+
+然後執行pyinstaller app.spec
+
+打包好的檔案會在dist/leda_app
+你可以在leda_app資料夾中找到leda_app.exe先執行已測試是否成功
+若失敗(會說找不到libzbar-64.dll之類的)，你可以檢查一下你的電腦有沒有Visual C++ Redistributable(理論上大家都會有)
 
 Rust Tauri打包
 1.

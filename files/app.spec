@@ -1,6 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 import glob
+
+# conda_path = f"C:/ProgramData/anaconda3" 
+# conda_path = f"C:/Users/YOURUSERNAME/.conda" 
 from PyInstaller.utils.hooks import (
     get_package_paths,
     collect_submodules,
@@ -39,14 +42,16 @@ hiddenimports = ['pydantic.fields', 'tqdm'] + collect_submodules('pydantic')
 datas += [('.', '.')]
 
 # ✅ 加入 pyzbar 與 pylibdmtx 的 DLLs
-binaries = [
-    ('C:/Users/Daniel/.conda/envs/leda/Lib/site-packages/pyzbar/libiconv.dll', '.'),
-    ('C:/Users/Daniel/.conda/envs/leda/Lib/site-packages/pyzbar/libzbar-64.dll', '.'),
-]
+#binaries = [
+#    (f'{conda_path}/envs/leda/Lib/site-packages/pyzbar/libiconv.dll', '.'),
+#    (f'{conda_path}/envs/leda/Lib/site-packages/pyzbar/libzbar-64.dll', '.'),
+#]
 
+binaries = []
 # ✅ 加入整個 pyzbar 和 pylibdmtx 資料夾的 DLL（若有需要）
 binaries += collect_dynamic_libs('pyzbar')
 binaries += collect_dynamic_libs('pylibdmtx')
+
 
 a = Analysis(
     ['app.py'],
