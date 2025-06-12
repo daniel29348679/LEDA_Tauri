@@ -5,8 +5,9 @@ This guide provides step-by-step instructions to compile the LEDA app for Python
 ## Python Compilation
 
 ### Step 1: Setup Files
-- Copy all files from the `files` directory into the `earth-api` directory (same location as `app.py`).
-- `clean.ps1` need to be applied after pyinstaller compile failed.You must run it in the `earth-api` dir.
+- Copy all files from the `files` directory into the `earth-api`       directory (same location as `app.py`).
+   - earth-api's NAS location:`團隊資料夾/LEDA_NCU/實習生任務/2025/LEDA_app安裝包`
+- `clean.ps1` need to be applied after pyinstaller compile failed.You must run it in the `earth-api` dir.(You have to apply `clean.ps1` before your first compilination if you use the earth-api.zip in the nas)
 
 ### Step 2: Update Syntax
 Ensure the following syntax updates are applied to the codebase to match package version requirements:
@@ -99,6 +100,7 @@ cargo install tauri-cli --version "^2.0.0" --locked
   ```bash
   cargo tauri build
   ```
+  You can find .msi in target/release.
 
 ### Recommendations for New Tauri API Development
 - The original LEDA app listens on port `8000`.
